@@ -1,0 +1,1378 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SA Onboarding Framework — SalesCloser</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&family=DM+Sans:wght@300;400;500;600&display=swap');
+
+  :root {
+    --bg: #080b14;
+    --surface: #0e1220;
+    --card: #111827;
+    --border: #1c2338;
+    --accent: #4f8ef7;
+    --accent2: #f97b5b;
+    --accent3: #3ec98e;
+    --accent4: #c084fc;
+    --yellow: #f4c842;
+    --text: #dde3f5;
+    --muted: #5a6380;
+    --call1: #4f8ef7;
+    --call2: #3ec98e;
+    --call3: #c084fc;
+    --call4: #f4c842;
+    --blocker: #f44f6a;
+    --done: #3ec98e;
+    --inprogress: #f4c842;
+    --todo: #4f8ef7;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    font-family: 'DM Sans', sans-serif;
+    color: var(--text);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* ── HEADER ── */
+  .header {
+    background: rgba(8,11,20,0.95);
+    backdrop-filter: blur(16px);
+    border-bottom: 1px solid var(--border);
+    padding: 14px 28px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: sticky;
+    top: 0;
+    z-index: 200;
+  }
+  .header-left { display: flex; align-items: center; gap: 14px; }
+  .header-badge {
+    background: linear-gradient(135deg, #4f8ef7 0%, #c084fc 100%);
+    border-radius: 8px;
+    padding: 5px 11px;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.7rem;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    color: #fff;
+  }
+  .header-title {
+    font-family: 'Syne', sans-serif;
+    font-weight: 800;
+    font-size: 1.05rem;
+    letter-spacing: -0.02em;
+    color: var(--text);
+  }
+  .header-title span { color: #4f8ef7; }
+  .header-subtitle {
+    font-size: 0.75rem;
+    color: var(--muted);
+    font-weight: 400;
+  }
+  .legend {
+    display: flex;
+    gap: 18px;
+    align-items: center;
+    flex-wrap: wrap;
+  }
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.7rem;
+    color: var(--muted);
+    font-weight: 500;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+  }
+  .legend-dot {
+    width: 8px; height: 8px; border-radius: 50%;
+  }
+
+  /* ── CANVAS ── */
+  .canvas {
+    padding: 32px 36px 60px;
+    overflow-x: auto;
+  }
+
+  /* ── PHASE SECTIONS ── */
+  .phase-wrapper {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    position: relative;
+  }
+
+  .phase-row {
+    display: flex;
+    align-items: flex-start;
+    gap: 0;
+    margin-bottom: 0;
+    position: relative;
+  }
+
+  .phase-label {
+    width: 148px;
+    min-width: 148px;
+    padding: 28px 16px 0 0;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 4px;
+    position: relative;
+  }
+  .phase-label-text {
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    font-size: 0.68rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    text-align: right;
+  }
+  .phase-label-num {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 1.6rem;
+    font-weight: 600;
+    line-height: 1;
+    opacity: 0.18;
+  }
+  .phase-label-desc {
+    font-size: 0.65rem;
+    color: var(--muted);
+    text-align: right;
+    line-height: 1.4;
+    max-width: 110px;
+  }
+
+  /* vertical connector line on left */
+  .phase-label::after {
+    content: '';
+    position: absolute;
+    right: -1px;
+    top: 32px;
+    bottom: -32px;
+    width: 2px;
+    background: var(--border);
+  }
+  .phase-row:last-child .phase-label::after { display: none; }
+
+  /* horizontal connector from phase label to first card */
+  .phase-connector {
+    width: 28px;
+    min-width: 28px;
+    display: flex;
+    align-items: flex-start;
+    padding-top: 42px;
+    position: relative;
+  }
+  .phase-connector::before {
+    content: '';
+    position: absolute;
+    top: 42px;
+    left: 0;
+    width: 100%;
+    height: 2px;
+    background: var(--border);
+  }
+
+  /* ── CARDS GRID ── */
+  .cards-row {
+    display: flex;
+    align-items: flex-start;
+    gap: 0;
+    flex-wrap: nowrap;
+    padding: 20px 0 36px;
+  }
+
+  /* card + arrow wrapper */
+  .card-unit {
+    display: flex;
+    align-items: center;
+    gap: 0;
+    position: relative;
+  }
+
+  /* arrow between cards */
+  .arrow {
+    width: 48px;
+    min-width: 48px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+  }
+  .arrow::before {
+    content: '';
+    position: absolute;
+    left: 0; right: 14px;
+    top: 50%;
+    height: 2px;
+    background: var(--border);
+    transform: translateY(-50%);
+  }
+  .arrow-head {
+    position: absolute;
+    right: 4px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 0; height: 0;
+    border-left: 9px solid var(--border);
+    border-top: 5px solid transparent;
+    border-bottom: 5px solid transparent;
+  }
+  .arrow.critical::before { background: #f44f6a; }
+  .arrow.critical .arrow-head { border-left-color: #f44f6a; }
+  .arrow.phase-link::before { background: #4f8ef7; opacity: 0.5; }
+  .arrow.phase-link .arrow-head { border-left-color: #4f8ef7; opacity: 0.5; }
+
+  /* ── NODE CARD ── */
+  .node {
+    width: 200px;
+    min-width: 200px;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 16px 18px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    position: relative;
+    overflow: hidden;
+  }
+  .node::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 3px;
+    border-radius: 14px 14px 0 0;
+  }
+  .node.call0::before { background: linear-gradient(90deg, #f44f6a, #ff8fa0); }
+  .node.call1::before { background: linear-gradient(90deg, #4f8ef7, #7db3ff); }
+  .node.call2::before { background: linear-gradient(90deg, #3ec98e, #7be8b8); }
+  .node.call3::before { background: linear-gradient(90deg, #c084fc, #e0aaff); }
+  .node.call4::before { background: linear-gradient(90deg, #f4c842, #ffe180); }
+  .node.gate::before { background: linear-gradient(90deg, #f44f6a, #ff8fa0); }
+  .node.handoff::before { background: linear-gradient(90deg, #f4c842, #ffe180); }
+
+  .node:hover {
+    border-color: #2a3355;
+    transform: translateY(-3px);
+    box-shadow: 0 12px 36px rgba(0,0,0,0.5), 0 0 0 1px rgba(79,142,247,0.15);
+  }
+  .node.active {
+    border-color: #4f8ef7;
+    box-shadow: 0 0 0 1px #4f8ef7, 0 12px 36px rgba(79,142,247,0.2);
+  }
+  .node.blocker {
+    border-color: rgba(244,79,106,0.35);
+  }
+  .node.blocker:hover {
+    border-color: #f44f6a;
+  }
+
+  .node-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    margin-bottom: 10px;
+  }
+  .node-icon {
+    font-size: 1.4rem;
+    line-height: 1;
+    opacity: 0.75;
+  }
+  .node-badge {
+    background: rgba(79, 142, 247, 0.12);
+    border: 1px solid rgba(79, 142, 247, 0.25);
+    color: #4f8ef7;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.6rem;
+    font-weight: 600;
+    padding: 3px 7px;
+    border-radius: 6px;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
+  .node-badge.done { 
+    background: rgba(62, 201, 142, 0.12);
+    border-color: rgba(62, 201, 142, 0.25);
+    color: #3ec98e;
+  }
+  .node-badge.blocker { 
+    background: rgba(244, 79, 106, 0.12);
+    border-color: rgba(244, 79, 106, 0.25);
+    color: #f44f6a;
+  }
+  .node-badge.handoff { 
+    background: rgba(244, 200, 66, 0.12);
+    border-color: rgba(244, 200, 66, 0.25);
+    color: #f4c842;
+  }
+
+  .node-title {
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    font-size: 0.88rem;
+    line-height: 1.3;
+    color: var(--text);
+    margin-bottom: 6px;
+  }
+  .node-desc {
+    font-size: 0.72rem;
+    line-height: 1.5;
+    color: var(--muted);
+  }
+
+  /* ── DETAIL PANEL ── */
+  .detail-panel {
+    position: fixed;
+    top: 0;
+    right: -480px;
+    width: 480px;
+    height: 100vh;
+    background: var(--surface);
+    border-left: 1px solid var(--border);
+    box-shadow: -8px 0 32px rgba(0,0,0,0.6);
+    transition: right 0.3s ease;
+    z-index: 300;
+    display: flex;
+    flex-direction: column;
+  }
+  .detail-panel.open {
+    right: 0;
+  }
+
+  .panel-header {
+    padding: 20px 24px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .panel-header-title {
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    font-size: 0.9rem;
+    color: var(--text);
+    letter-spacing: -0.01em;
+  }
+  .panel-close {
+    background: none;
+    border: none;
+    color: var(--muted);
+    font-size: 1.4rem;
+    cursor: pointer;
+    padding: 4px;
+    line-height: 1;
+    transition: color 0.2s;
+  }
+  .panel-close:hover {
+    color: var(--text);
+  }
+
+  .panel-content {
+    flex: 1;
+    overflow-y: auto;
+    padding: 24px;
+  }
+  .panel-phase {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.65rem;
+    font-weight: 600;
+    color: #4f8ef7;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    margin-bottom: 8px;
+  }
+  .panel-title {
+    font-family: 'Syne', sans-serif;
+    font-weight: 800;
+    font-size: 1.4rem;
+    line-height: 1.25;
+    color: var(--text);
+    margin-bottom: 12px;
+  }
+  .panel-desc {
+    font-size: 0.88rem;
+    line-height: 1.7;
+    color: var(--muted);
+    margin-bottom: 24px;
+  }
+  .panel-section-title {
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--text);
+    margin: 24px 0 12px;
+    padding-top: 16px;
+    border-top: 1px solid var(--border);
+  }
+  .panel-section-title:first-of-type {
+    border-top: none;
+    padding-top: 0;
+  }
+  .panel-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+  .panel-list li {
+    padding: 10px 0 10px 28px;
+    position: relative;
+    font-size: 0.82rem;
+    line-height: 1.6;
+    color: var(--text);
+    border-bottom: 1px solid rgba(28, 35, 56, 0.5);
+  }
+  .panel-list li:last-child {
+    border-bottom: none;
+  }
+  .panel-list li::before {
+    content: '→';
+    position: absolute;
+    left: 8px;
+    top: 10px;
+    color: #4f8ef7;
+    font-weight: 600;
+  }
+  .panel-list li.ok-item::before {
+    content: '✓';
+    color: #3ec98e;
+  }
+  .panel-list li.blocker-item::before {
+    content: '✗';
+    color: #f44f6a;
+  }
+  .panel-rule {
+    background: rgba(79, 142, 247, 0.08);
+    border: 1px solid rgba(79, 142, 247, 0.25);
+    border-radius: 10px;
+    padding: 14px 16px;
+    margin-top: 20px;
+    font-size: 0.82rem;
+    line-height: 1.6;
+    color: var(--text);
+  }
+  .panel-rule strong {
+    color: #4f8ef7;
+    font-weight: 600;
+  }
+  .panel-tip {
+    background: rgba(244, 200, 66, 0.08);
+    border: 1px solid rgba(244, 200, 66, 0.25);
+    border-radius: 10px;
+    padding: 14px 16px;
+    margin-top: 16px;
+    font-size: 0.82rem;
+    line-height: 1.6;
+    color: var(--text);
+  }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-left">
+    <div class="header-badge">SA PLAYBOOK</div>
+    <div>
+      <div class="header-title">SA Onboarding Framework <span>·</span> SalesCloser</div>
+      <div class="header-subtitle">From Closed-Won to First Value</div>
+    </div>
+  </div>
+  <div class="legend">
+    <div class="legend-item">
+      <div class="legend-dot" style="background:#f44f6a;"></div>
+      Pre-Onboarding
+    </div>
+    <div class="legend-item">
+      <div class="legend-dot" style="background:#4f8ef7;"></div>
+      Call 1
+    </div>
+    <div class="legend-item">
+      <div class="legend-dot" style="background:#3ec98e;"></div>
+      Call 2
+    </div>
+    <div class="legend-item">
+      <div class="legend-dot" style="background:#c084fc;"></div>
+      Call 3
+    </div>
+    <div class="legend-item">
+      <div class="legend-dot" style="background:#f4c842;"></div>
+      Call 4
+    </div>
+  </div>
+</div>
+
+<div class="canvas">
+  <div class="phase-wrapper">
+
+    <!-- PRE-ONBOARDING -->
+    <div class="phase-row">
+      <div class="phase-label">
+        <div class="phase-label-text" style="color:#f44f6a;">Pre-Onboarding</div>
+        <div class="phase-label-num">00</div>
+        <div class="phase-label-desc">AE Handoff & Validation</div>
+      </div>
+      <div class="phase-connector"></div>
+      <div class="cards-row">
+        <div class="card-unit">
+          <div class="node call0 blocker" data-id="P0-01" onclick="openPanel('P0-01')">
+            <div class="node-header">
+              <div class="node-icon">📋</div>
+              <div class="node-badge blocker">Required</div>
+            </div>
+            <div class="node-title">AE Handoff Document</div>
+            <div class="node-desc">Mandatory handoff form with Twilio compliance checkboxes</div>
+          </div>
+        </div>
+        <div class="arrow critical"><div class="arrow-head"></div></div>
+        <div class="card-unit">
+          <div class="node call0" data-id="P0-02" onclick="openPanel('P0-02')">
+            <div class="node-header">
+              <div class="node-icon">🎯</div>
+              <div class="node-badge">Gate</div>
+            </div>
+            <div class="node-title">Validate Tier & Scope</div>
+            <div class="node-desc">SA reviews what was sold and confirms tier boundaries</div>
+          </div>
+        </div>
+        <div class="arrow critical"><div class="arrow-head"></div></div>
+        <div class="card-unit">
+          <div class="node call0" data-id="P0-03" onclick="openPanel('P0-03')">
+            <div class="node-header">
+              <div class="node-icon">📅</div>
+              <div class="node-badge">Action</div>
+            </div>
+            <div class="node-title">Schedule All 4 Calls</div>
+            <div class="node-desc">Book all four calls during first interaction</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- CALL 1 -->
+    <div class="phase-row">
+      <div class="phase-label">
+        <div class="phase-label-text" style="color:#4f8ef7;">Call 1</div>
+        <div class="phase-label-num">01</div>
+        <div class="phase-label-desc">Information Gathering & Expectations</div>
+      </div>
+      <div class="phase-connector"></div>
+      <div class="cards-row">
+        <div class="card-unit">
+          <div class="node call1" data-id="C1-01" onclick="openPanel('C1-01')">
+            <div class="node-header">
+              <div class="node-icon">🎤</div>
+              <div class="node-badge">Call</div>
+            </div>
+            <div class="node-title">Understand Business</div>
+            <div class="node-desc">Understand client's business and objectives</div>
+          </div>
+        </div>
+        <div class="arrow"><div class="arrow-head"></div></div>
+        <div class="card-unit">
+          <div class="node call1" data-id="C1-02" onclick="openPanel('C1-02')">
+            <div class="node-header">
+              <div class="node-icon">🔍</div>
+              <div class="node-badge">Discovery</div>
+            </div>
+            <div class="node-title">Clarify Product Usage</div>
+            <div class="node-desc">Inbound vs outbound, lead sources, integrations</div>
+          </div>
+        </div>
+        <div class="arrow"><div class="arrow-head"></div></div>
+        <div class="card-unit">
+          <div class="node call1" data-id="C1-03" onclick="openPanel('C1-03')">
+            <div class="node-header">
+              <div class="node-icon">⚖️</div>
+              <div class="node-badge">Alignment</div>
+            </div>
+            <div class="node-title">Set Expectations</div>
+            <div class="node-desc">Discuss capabilities, Twilio requirements, timeline</div>
+          </div>
+        </div>
+        <div class="arrow"><div class="arrow-head"></div></div>
+        <div class="card-unit">
+          <div class="node call1" data-id="C1-04" onclick="openPanel('C1-04')">
+            <div class="node-header">
+              <div class="node-icon">📄</div>
+              <div class="node-badge">Deliverable</div>
+            </div>
+            <div class="node-title">One-Pager Document</div>
+            <div class="node-desc">Technical summary of integration asks</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- BETWEEN CALLS 1-2 -->
+    <div class="phase-row">
+      <div class="phase-label">
+        <div class="phase-label-text" style="color:#7be8b8;">Between Calls</div>
+        <div class="phase-label-num" style="font-size:1.2rem;">↓</div>
+        <div class="phase-label-desc">48hr window + automation</div>
+      </div>
+      <div class="phase-connector"></div>
+      <div class="cards-row">
+        <div class="card-unit">
+          <div class="node call2" data-id="B1-01" onclick="openPanel('B1-01')">
+            <div class="node-header">
+              <div class="node-icon">🤖</div>
+              <div class="node-badge">Build</div>
+            </div>
+            <div class="node-title">SA Builds Agent</div>
+            <div class="node-desc">Create initial prompt and framework based on Call 1</div>
+          </div>
+        </div>
+        <div class="arrow"><div class="arrow-head"></div></div>
+        <div class="card-unit">
+          <div class="node call2" data-id="B1-02" onclick="openPanel('B1-02')">
+            <div class="node-header">
+              <div class="node-icon">📧</div>
+              <div class="node-badge">Auto</div>
+            </div>
+            <div class="node-title">Automated Emails</div>
+            <div class="node-desc">Educational content + NPS survey</div>
+          </div>
+        </div>
+        <div class="arrow"><div class="arrow-head"></div></div>
+        <div class="card-unit">
+          <div class="node call2" data-id="B1-03" onclick="openPanel('B1-03')">
+            <div class="node-header">
+              <div class="node-icon">✅</div>
+              <div class="node-badge">Verification</div>
+            </div>
+            <div class="node-title">Client Info Sheet</div>
+            <div class="node-desc">24hr turnaround for verification</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- CALL 2 -->
+    <div class="phase-row">
+      <div class="phase-label">
+        <div class="phase-label-text" style="color:#3ec98e;">Call 2</div>
+        <div class="phase-label-num">02</div>
+        <div class="phase-label-desc">Agent Review & Optimization</div>
+      </div>
+      <div class="phase-connector"></div>
+      <div class="cards-row">
+        <div class="card-unit">
+          <div class="node call2" data-id="C2-01" onclick="openPanel('C2-01')">
+            <div class="node-header">
+              <div class="node-icon">🎨</div>
+              <div class="node-badge">Review</div>
+            </div>
+            <div class="node-title">Present Agent</div>
+            <div class="node-desc">Show pre-built agent framework to client</div>
+          </div>
+        </div>
+        <div class="arrow"><div class="arrow-head"></div></div>
+        <div class="card-unit">
+          <div class="node call2" data-id="C2-02" onclick="openPanel('C2-02')">
+            <div class="node-header">
+              <div class="node-icon">💬</div>
+              <div class="node-badge">Feedback</div>
+            </div>
+            <div class="node-title">Gather Feedback</div>
+            <div class="node-desc">Client adds color and creativity</div>
+          </div>
+        </div>
+        <div class="arrow"><div class="arrow-head"></div></div>
+        <div class="card-unit">
+          <div class="node call2" data-id="C2-03" onclick="openPanel('C2-03')">
+            <div class="node-header">
+              <div class="node-icon">🔧</div>
+              <div class="node-badge">Tune</div>
+            </div>
+            <div class="node-title">Make Adjustments</div>
+            <div class="node-desc">Customize to business needs</div>
+          </div>
+        </div>
+        <div class="arrow critical"><div class="arrow-head"></div></div>
+        <div class="card-unit">
+          <div class="node call2 blocker" data-id="C2-04" onclick="openPanel('C2-04')">
+            <div class="node-header">
+              <div class="node-icon">✓</div>
+              <div class="node-badge blocker">Exit</div>
+            </div>
+            <div class="node-title">Exit Criteria</div>
+            <div class="node-desc">Agent built and ready for testing</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- BETWEEN CALLS 2-3 -->
+    <div class="phase-row">
+      <div class="phase-label">
+        <div class="phase-label-text" style="color:#e0aaff;">Between Calls</div>
+        <div class="phase-label-num" style="font-size:1.2rem;">↓</div>
+        <div class="phase-label-desc">48hr window + prep</div>
+      </div>
+      <div class="phase-connector"></div>
+      <div class="cards-row">
+        <div class="card-unit">
+          <div class="node call3" data-id="B2-01" onclick="openPanel('B2-01')">
+            <div class="node-header">
+              <div class="node-icon">⚙️</div>
+              <div class="node-badge">Setup</div>
+            </div>
+            <div class="node-title">Deployment Prep</div>
+            <div class="node-desc">Final configurations and testing</div>
+          </div>
+        </div>
+        <div class="arrow"><div class="arrow-head"></div></div>
+        <div class="card-unit">
+          <div class="node call3" data-id="B2-02" onclick="openPanel('B2-02')">
+            <div class="node-header">
+              <div class="node-icon">📧</div>
+              <div class="node-badge">Auto</div>
+            </div>
+            <div class="node-title">Engagement Emails</div>
+            <div class="node-desc">Community and resource emails</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- CALL 3 -->
+    <div class="phase-row">
+      <div class="phase-label">
+        <div class="phase-label-text" style="color:#c084fc;">Call 3</div>
+        <div class="phase-label-num">03</div>
+        <div class="phase-label-desc">Deployment & Testing</div>
+      </div>
+      <div class="phase-connector"></div>
+      <div class="cards-row">
+        <div class="card-unit">
+          <div class="node call3" data-id="C3-01" onclick="openPanel('C3-01')">
+            <div class="node-header">
+              <div class="node-icon">🚀</div>
+              <div class="node-badge">Deploy</div>
+            </div>
+            <div class="node-title">Deploy to Live</div>
+            <div class="node-desc">Agent goes live in client environment</div>
+          </div>
+        </div>
+        <div class="arrow"><div class="arrow-head"></div></div>
+        <div class="card-unit">
+          <div class="node call3" data-id="C3-02" onclick="openPanel('C3-02')">
+            <div class="node-header">
+              <div class="node-icon">🧪</div>
+              <div class="node-badge">Test</div>
+            </div>
+            <div class="node-title">Client Testing</div>
+            <div class="node-desc">Client tries agent in real-time</div>
+          </div>
+        </div>
+        <div class="arrow"><div class="arrow-head"></div></div>
+        <div class="card-unit">
+          <div class="node call3" data-id="C3-03" onclick="openPanel('C3-03')">
+            <div class="node-header">
+              <div class="node-icon">📊</div>
+              <div class="node-badge">Review</div>
+            </div>
+            <div class="node-title">Mid-Point Review</div>
+            <div class="node-desc">Assess performance and trends</div>
+          </div>
+        </div>
+        <div class="arrow"><div class="arrow-head"></div></div>
+        <div class="card-unit">
+          <div class="node call3" data-id="C3-04" onclick="openPanel('C3-04')">
+            <div class="node-header">
+              <div class="node-icon">🔄</div>
+              <div class="node-badge">Optimize</div>
+            </div>
+            <div class="node-title">Make Tweaks</div>
+            <div class="node-desc">Adjustments based on observed trends</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- BETWEEN CALLS 3-4 -->
+    <div class="phase-row">
+      <div class="phase-label">
+        <div class="phase-label-text" style="color:#ffe180;">Between Calls</div>
+        <div class="phase-label-num" style="font-size:1.2rem;">↓</div>
+        <div class="phase-label-desc">48hr window + monitoring</div>
+      </div>
+      <div class="phase-connector"></div>
+      <div class="cards-row">
+        <div class="card-unit">
+          <div class="node call4" data-id="B3-01" onclick="openPanel('B3-01')">
+            <div class="node-header">
+              <div class="node-icon">📈</div>
+              <div class="node-badge">Monitor</div>
+            </div>
+            <div class="node-title">Performance Tracking</div>
+            <div class="node-desc">Monitor agent performance metrics</div>
+          </div>
+        </div>
+        <div class="arrow"><div class="arrow-head"></div></div>
+        <div class="card-unit">
+          <div class="node call4" data-id="B3-02" onclick="openPanel('B3-02')">
+            <div class="node-header">
+              <div class="node-icon">📋</div>
+              <div class="node-badge">Prep</div>
+            </div>
+            <div class="node-title">Handoff Documentation</div>
+            <div class="node-desc">Prepare CSM transition materials</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- CALL 4 -->
+    <div class="phase-row">
+      <div class="phase-label">
+        <div class="phase-label-text" style="color:#f4c842;">Call 4</div>
+        <div class="phase-label-num">04</div>
+        <div class="phase-label-desc">Final Handoff to CSM</div>
+      </div>
+      <div class="phase-connector"></div>
+      <div class="cards-row">
+        <div class="card-unit">
+          <div class="node call4" data-id="C4-01" onclick="openPanel('C4-01')">
+            <div class="node-header">
+              <div class="node-icon">🎯</div>
+              <div class="node-badge">Review</div>
+            </div>
+            <div class="node-title">Final Validation</div>
+            <div class="node-desc">Validate agent performance</div>
+          </div>
+        </div>
+        <div class="arrow"><div class="arrow-head"></div></div>
+        <div class="card-unit">
+          <div class="node call4" data-id="C4-02" onclick="openPanel('C4-02')">
+            <div class="node-header">
+              <div class="node-icon">📊</div>
+              <div class="node-badge">Health</div>
+            </div>
+            <div class="node-title">Launch Health Score</div>
+            <div class="node-desc">Target: 6-7 minimum</div>
+          </div>
+        </div>
+        <div class="arrow"><div class="arrow-head"></div></div>
+        <div class="card-unit">
+          <div class="node call4 handoff" data-id="C4-03" onclick="openPanel('C4-03')">
+            <div class="node-header">
+              <div class="node-icon">🤝</div>
+              <div class="node-badge handoff">Handoff</div>
+            </div>
+            <div class="node-title">Transition to CSM</div>
+            <div class="node-desc">Introduce CSM and outline support</div>
+          </div>
+        </div>
+        <div class="arrow critical"><div class="arrow-head"></div></div>
+        <div class="card-unit">
+          <div class="node call4 blocker" data-id="C4-04" onclick="openPanel('C4-04')">
+            <div class="node-header">
+              <div class="node-icon">✅</div>
+              <div class="node-badge blocker">Exit</div>
+            </div>
+            <div class="node-title">SA Sign-Off</div>
+            <div class="node-desc">Formal completion and handoff</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ESCALATION -->
+    <div class="phase-row">
+      <div class="phase-label">
+        <div class="phase-label-text" style="color:#f44f6a;">Escalation</div>
+        <div class="phase-label-num">⚠️</div>
+        <div class="phase-label-desc">If timeline exceeds 30 days</div>
+      </div>
+      <div class="phase-connector"></div>
+      <div class="cards-row">
+        <div class="card-unit">
+          <div class="node gate blocker" data-id="E1-01" onclick="openPanel('E1-01')">
+            <div class="node-header">
+              <div class="node-icon">⏱️</div>
+              <div class="node-badge blocker">Gate</div>
+            </div>
+            <div class="node-title">30-Day Check</div>
+            <div class="node-desc">Document all engagement attempts</div>
+          </div>
+        </div>
+        <div class="arrow critical"><div class="arrow-head"></div></div>
+        <div class="card-unit">
+          <div class="node gate blocker" data-id="E1-02" onclick="openPanel('E1-02')">
+            <div class="node-header">
+              <div class="node-icon">🚨</div>
+              <div class="node-badge blocker">Escalate</div>
+            </div>
+            <div class="node-title">Escalate to Leadership</div>
+            <div class="node-desc">Flag to Miguel or Sean</div>
+          </div>
+        </div>
+        <div class="arrow"><div class="arrow-head"></div></div>
+        <div class="card-unit">
+          <div class="node gate" data-id="E1-03" onclick="openPanel('E1-03')">
+            <div class="node-header">
+              <div class="node-icon">📦</div>
+              <div class="node-badge">Route</div>
+            </div>
+            <div class="node-title">CSM Bucket</div>
+            <div class="node-desc">Non-engaged clients moved to CSM</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- Detail Panel -->
+<div class="detail-panel" id="detail-panel">
+  <div class="panel-header">
+    <div class="panel-header-title">Details</div>
+    <button class="panel-close" onclick="closePanel()">×</button>
+  </div>
+  <div class="panel-content" id="panel-content">
+    <!-- Content populated by JS -->
+  </div>
+</div>
+
+<script>
+const nodeData = {
+  'P0-01': {
+    phase: 'Pre-Onboarding · Gate',
+    title: 'AE Handoff Document',
+    desc: 'Mandatory handoff form must be completed by AE before any kickoff is scheduled.',
+    items: [
+      'Contract & tier purchased (Baseline / Silver / Gold)',
+      'Primary use case sold (Inbound, Outbound, SDR replacement)',
+      'Key outcomes promised (speed-to-lead, bookings, pipeline)',
+      'CRM & tech stack (HubSpot, Salesforce, calendars, telephony)',
+      'Named stakeholders & decision owner',
+      'Go-live date target',
+      'Twilio as third-party provider confirmation ✓',
+      'Twilio terms and conditions acknowledged ✓',
+      'Spam regulations and compliance requirements confirmed ✓',
+      'Associated costs for Twilio disclosed ✓'
+    ],
+    blockers: ['No kickoff is scheduled without this document'],
+    rule: '🚫 This is a hard gate. No exceptions.',
+    tip: '💡 AE confirms what was sold and Twilio compliance. SA discovers technical details in Call 1.'
+  },
+  'P0-02': {
+    phase: 'Pre-Onboarding · Validation',
+    title: 'Validate Tier & Scope',
+    desc: 'SA reviews what was sold and clearly delimits what is in and out of scope.',
+    items: [
+      'Confirm tier: Baseline / Silver / Gold / Platinum',
+      'List features included in tier',
+      'Document what was NOT sold',
+      'Validate integrations are supported by tier',
+      'Verify if regional pricing was applied (VP approved?)'
+    ],
+    rule: '🚫 The SA builds what was sold — not what the customer wishes they bought.'
+  },
+  'P0-03': {
+    phase: 'Pre-Onboarding · Scheduling',
+    title: 'Schedule All 4 Calls',
+    desc: 'All four calls must be scheduled during the first interaction with the client.',
+    items: [
+      'Schedule Call 1: Information Gathering',
+      'Schedule Call 2: Agent Review (48hrs after Call 1)',
+      'Schedule Call 3: Deployment (48hrs after Call 2)',
+      'Schedule Call 4: Final Handoff (48hrs after Call 3)',
+      'Target launch: 14 days',
+      'Maximum launch window: 30 days'
+    ],
+    rule: '⏱️ 48-hour windows between calls are mandatory.',
+    tip: '💡 Scheduling all calls upfront creates accountability and urgency.'
+  },
+  'C1-01': {
+    phase: 'Call 1 · Information Gathering',
+    title: 'Understand Business & Objectives',
+    desc: 'Deep dive into client\'s business model, current process, and what they want to achieve.',
+    items: [
+      'Understand their sales motion and team structure',
+      'Current process for handling inbound/outbound',
+      'Pain points they\'re trying to solve',
+      'Definition of success for them',
+      'Team size and roles'
+    ]
+  },
+  'C1-02': {
+    phase: 'Call 1 · Discovery',
+    title: 'Clarify Product Usage',
+    desc: 'Identify exactly how the product will be used and what integrations are needed.',
+    items: [
+      'Inbound vs. outbound usage',
+      'Lead flow sources (website, ads, etc.)',
+      'Integration requirements (CRM, calendar, telephony)',
+      'Volume expectations',
+      'Multi-channel needs (voice, SMS, email)'
+    ]
+  },
+  'C1-03': {
+    phase: 'Call 1 · Expectations',
+    title: 'Set Expectations',
+    desc: 'Clear communication about capabilities, limitations, compliance, and timelines.',
+    items: [
+      'What the product CAN do based on their tier',
+      'What the product CANNOT do',
+      'Twilio requirements and compliance',
+      'Spam regulations and best practices',
+      'Realistic timeline: 2-3 months for measurable results',
+      'Scope boundaries and tier limitations'
+    ],
+    rule: '💡 SA must say: "We\'re going to focus on the outcomes included in your package. Once those are live and delivering value, we can discuss expansion."'
+  },
+  'C1-04': {
+    phase: 'Call 1 · Deliverable',
+    title: 'One-Pager Document',
+    desc: 'Technical summary created post-Call 1 to document integration asks and requirements.',
+    items: [
+      'Summary of integration requirements',
+      'Technical scope details',
+      'CRM and calendar specifics',
+      'Telephony setup needs',
+      'Any custom requirements within tier'
+    ],
+    tip: '📄 This document serves as the technical blueprint for the implementation.'
+  },
+  'B1-01': {
+    phase: 'Between Calls 1-2 · Build',
+    title: 'SA Builds Agent',
+    desc: 'SA creates the initial agent framework based on information gathered in Call 1.',
+    items: [
+      'Create initial prompt based on Call 1 discovery',
+      'Build knowledge base framework',
+      'Set up basic call flows',
+      'Prepare demo scenarios',
+      'Ready agent for presentation in Call 2'
+    ],
+    rule: '🤖 Client comes to Call 2 with a working agent already built, not starting from scratch.',
+    tip: '💡 This saves massive time and gives clients something tangible to react to.'
+  },
+  'B1-02': {
+    phase: 'Between Calls 1-2 · Automation',
+    title: 'Automated Emails',
+    desc: 'Educational content and engagement sent automatically between manual calls.',
+    items: [
+      'Welcome email from assigned SA',
+      'Educational content about best practices',
+      'NPS survey email after Call 1',
+      'Community and resource links',
+      'Preparation tips for Call 2'
+    ]
+  },
+  'B1-03': {
+    phase: 'Between Calls 1-2 · Verification',
+    title: 'Client Information Sheet',
+    desc: 'Client completes verification form with 24-hour turnaround expectation.',
+    items: [
+      'Company information verification',
+      'Technical contact details',
+      'Integration credentials ready',
+      'Stakeholder confirmation',
+      '24-hour turnaround expected'
+    ]
+  },
+  'C2-01': {
+    phase: 'Call 2 · Review',
+    title: 'Present Pre-Built Agent',
+    desc: 'SA shows the agent framework that was built between calls.',
+    items: [
+      'Demo the pre-built agent',
+      'Walk through prompts and flows',
+      'Show knowledge base setup',
+      'Demonstrate how it will work in their environment',
+      'Get initial reaction'
+    ]
+  },
+  'C2-02': {
+    phase: 'Call 2 · Feedback',
+    title: 'Gather Client Feedback',
+    desc: 'Client provides input to customize agent to their specific needs.',
+    items: [
+      'Client adds "color and creativity"',
+      'Refine tone and language',
+      'Adjust call flows if needed',
+      'Fine-tune discovery questions',
+      'Validate it matches their brand'
+    ],
+    tip: '💬 This is where the agent goes from "working" to "theirs".'
+  },
+  'C2-03': {
+    phase: 'Call 2 · Optimization',
+    title: 'Make Adjustments',
+    desc: 'Live customization during the call based on client feedback.',
+    items: [
+      'Adjust prompts in real-time',
+      'Refine qualification logic',
+      'Update knowledge base',
+      'Configure routing rules',
+      'Test scenarios together'
+    ]
+  },
+  'C2-04': {
+    phase: 'Call 2 · Exit Criteria',
+    title: 'Agent Ready for Testing',
+    desc: 'Exit gate: Agent must be built and approved before moving to deployment.',
+    okItems: [
+      'Exit: Agent is built and functional',
+      'Exit: Client has approved the framework',
+      'Exit: All customizations complete',
+      'Exit: Ready for live deployment'
+    ],
+    rule: '🚫 Do not proceed to Call 3 until agent is approved.'
+  },
+  'B2-01': {
+    phase: 'Between Calls 2-3 · Setup',
+    title: 'Deployment Preparation',
+    desc: 'Final configurations and testing before going live.',
+    items: [
+      'Complete integration setup',
+      'Configure CRM connections',
+      'Test telephony if applicable',
+      'Validate calendar booking',
+      'Run pre-deployment checks'
+    ]
+  },
+  'B2-02': {
+    phase: 'Between Calls 2-3 · Engagement',
+    title: 'Community & Resource Emails',
+    desc: 'Keep client engaged with helpful resources and community access.',
+    items: [
+      'Access to community resources',
+      'Best practice guides',
+      'Success stories from similar clients',
+      'Preparation for go-live',
+      'What to expect in deployment'
+    ]
+  },
+  'C3-01': {
+    phase: 'Call 3 · Deployment',
+    title: 'Deploy Agent to Live',
+    desc: 'Agent goes live in the client\'s production environment.',
+    items: [
+      'Deploy to live environment',
+      'Activate integrations',
+      'Turn on lead routing',
+      'Enable telephony if applicable',
+      'Confirm all systems connected'
+    ],
+    rule: '🚀 This is go-live moment.'
+  },
+  'C3-02': {
+    phase: 'Call 3 · Testing',
+    title: 'Client Testing',
+    desc: 'Client actively tests the agent in real-time with live or test scenarios.',
+    items: [
+      'Client makes test calls',
+      'Validate responses and flows',
+      'Check CRM logging',
+      'Test booking if applicable',
+      'Verify all integrations working'
+    ]
+  },
+  'C3-03': {
+    phase: 'Call 3 · Review',
+    title: 'Mid-Point Performance Review',
+    desc: 'Assess initial performance and identify any trends or issues.',
+    items: [
+      'Review call quality',
+      'Check qualification accuracy',
+      'Assess response times',
+      'Identify any friction points',
+      'Look for patterns in performance'
+    ]
+  },
+  'C3-04': {
+    phase: 'Call 3 · Optimization',
+    title: 'Make Tweaks Based on Trends',
+    desc: 'Adjustments based on observed behavior and performance.',
+    items: [
+      'Refine prompts based on actual calls',
+      'Adjust qualification logic',
+      'Optimize routing rules',
+      'Fix any integration issues',
+      'Fine-tune based on real data'
+    ]
+  },
+  'B3-01': {
+    phase: 'Between Calls 3-4 · Monitoring',
+    title: 'Performance Tracking',
+    desc: 'Monitor agent performance metrics to validate readiness for handoff.',
+    items: [
+      'Track call volume and quality',
+      'Monitor conversion rates',
+      'Check CRM data accuracy',
+      'Assess booking rates if applicable',
+      'Document any issues'
+    ]
+  },
+  'B3-02': {
+    phase: 'Between Calls 3-4 · Documentation',
+    title: 'Prepare Handoff Materials',
+    desc: 'Create comprehensive documentation for CSM transition.',
+    items: [
+      'Document active flows and configurations',
+      'List success metrics achieved',
+      'Note any risks or limitations',
+      'Identify expansion signals observed',
+      'Prepare transition summary'
+    ]
+  },
+  'C4-01': {
+    phase: 'Call 4 · Final Review',
+    title: 'Final Validation',
+    desc: 'Review and validate that agent is performing as expected.',
+    items: [
+      'Review performance metrics',
+      'Validate success criteria met',
+      'Confirm client satisfaction',
+      'Address any final concerns',
+      'Document what\'s working well'
+    ]
+  },
+  'C4-02': {
+    phase: 'Call 4 · Health Score',
+    title: 'Launch Health Score Assessment',
+    desc: 'Systematic health score to validate successful launch.',
+    items: [
+      'Score agent performance (1-10 scale)',
+      'Target minimum: 6-7',
+      'Assess integration stability',
+      'Evaluate client engagement',
+      'Document score rationale'
+    ],
+    rule: '📊 Launch health score must be 6-7 minimum for successful handoff.'
+  },
+  'C4-03': {
+    phase: 'Call 4 · Handoff',
+    title: 'Transition to CSM',
+    desc: 'Official handoff to Customer Success Manager.',
+    items: [
+      'Introduce assigned CSM',
+      'Outline ongoing support structure',
+      'Set expectations for CSM relationship',
+      'Transfer documentation and context',
+      'Schedule first CSM check-in'
+    ],
+    tip: '💡 SA Exit Line: "Everything included in your package is live. Your CSM will focus on optimization and results."'
+  },
+  'C4-04': {
+    phase: 'Call 4 · Exit Gate',
+    title: 'SA Formal Sign-Off',
+    desc: 'SA confirms implementation is complete and aligned to what was sold.',
+    okItems: [
+      'Exit: Scope clear and aligned to tier',
+      'Exit: Implementation complete as documented',
+      'Exit: Any misalignment was flagged early',
+      'Exit: SA signs Transition Document',
+      'Exit: First value milestone achieved'
+    ],
+    rule: '🚫 CSM cannot begin until SA sign-off is complete.',
+    tip: '🎯 The SA builds what was sold. The CSM optimizes what is live.'
+  },
+  'E1-01': {
+    phase: 'Escalation Protocol · 30-Day Gate',
+    title: '30-Day Check',
+    desc: 'If launch has not occurred within 30 days, document all engagement attempts.',
+    items: [
+      'Document all outreach attempts',
+      'List barriers to launch',
+      'Note client responsiveness',
+      'Capture reasons for delay',
+      'Prepare escalation brief'
+    ],
+    rule: '⏱️ After 30 days without launch, escalation is mandatory.'
+  },
+  'E1-02': {
+    phase: 'Escalation Protocol · Leadership',
+    title: 'Escalate to Miguel or Sean',
+    desc: 'After 30 days, escalate non-engaged clients to leadership.',
+    items: [
+      'Flag to Miguel or Sean',
+      'Provide escalation brief',
+      'Share engagement history',
+      'Recommend next steps',
+      'Await leadership decision'
+    ],
+    rule: '🚨 This ensures no client falls through the cracks.'
+  },
+  'E1-03': {
+    phase: 'Escalation Protocol · Routing',
+    title: 'Move to CSM Bucket',
+    desc: 'Non-engaged clients are moved to CSM for different approach.',
+    items: [
+      'Transfer to CSM ownership',
+      'Provide full context',
+      'CSM attempts re-engagement',
+      'Different approach than SA-led',
+      'Monitor for re-activation'
+    ],
+    tip: '📦 Sometimes a different voice and approach can re-engage a stalled client.'
+  }
+};
+
+function openPanel(id) {
+  const data = nodeData[id];
+  if (!data) return;
+
+  // highlight node
+  document.querySelectorAll('.node').forEach(n => n.classList.remove('active'));
+  document.querySelector(`[data-id="${id}"]`)?.classList.add('active');
+
+  let html = `
+    <div class="panel-phase">${data.phase}</div>
+    <div class="panel-title">${data.title}</div>
+    <div class="panel-desc">${data.desc}</div>
+  `;
+
+  if (data.items && data.items.length) {
+    html += `<div class="panel-section-title">What Happens Here</div><ul class="panel-list">`;
+    data.items.forEach(i => { html += `<li>${i}</li>`; });
+    html += '</ul>';
+  }
+
+  if (data.okItems && data.okItems.length) {
+    html += `<div class="panel-section-title">Exit Criteria ✓</div><ul class="panel-list">`;
+    data.okItems.forEach(i => { html += `<li class="ok-item">${i}</li>`; });
+    html += '</ul>';
+  }
+
+  if (data.blockers && data.blockers.length) {
+    html += `<div class="panel-section-title">Blockers ✗</div><ul class="panel-list">`;
+    data.blockers.forEach(i => { html += `<li class="blocker-item">${i}</li>`; });
+    html += '</ul>';
+  }
+
+  if (data.rule) {
+    html += `<div class="panel-rule"><strong>Rule:</strong> ${data.rule}</div>`;
+  }
+
+  if (data.tip) {
+    html += `<div class="panel-tip">${data.tip}</div>`;
+  }
+
+  document.getElementById('panel-content').innerHTML = html;
+  document.getElementById('detail-panel').classList.add('open');
+}
+
+function closePanel() {
+  document.getElementById('detail-panel').classList.remove('open');
+  document.querySelectorAll('.node').forEach(n => n.classList.remove('active'));
+}
+</script>
+
+</body>
+</html>
